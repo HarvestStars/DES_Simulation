@@ -6,8 +6,8 @@ import visualize_util as vu
 # Calculate confidence intervals for the difference in means of two samples
 def calculate_pair_confidence_intervals(n0, n1, lam, miu, CI=0.95):
     # Read the data from the files
-    arrival_times_base, waiting_times_base = fs.read(n0, fs.SIMU_RESULT_PATH, lam, miu)
-    arrival_times_compared, waiting_times_compared = fs.read(n1, fs.SIMU_RESULT_PATH, lam, miu)
+    _, _, waiting_times_base, _ = fs.read(n0, fs.SIMU_RESULT_PATH, lam, miu)
+    _, _, waiting_times_compared, _ = fs.read(n1, fs.SIMU_RESULT_PATH, lam, miu)
 
     confidence_level = CI
     lamb_CI = stats.norm.ppf((1 + confidence_level) / 2) # for 95% it should be 1.96

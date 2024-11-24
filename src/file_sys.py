@@ -6,7 +6,7 @@ SIMU_STATISTICS_PATH = '../statistics/'
 SIMU_VISUALIZATION_PATH = '../visualization/'
 
 CONTENT_TEMPLATE = ("Customer {customer_number} in system with {system_server_number} servers, "
-                    "arrived at {arrive_time:.2f}, and got service after waiting {waiting_time}\n")
+                    "arrived at {arrive_time:.4f}, and got service after waiting {waiting_time:.4f}\n")
 
 CONTENT_PATTERN = r"Customer \d+ in system with \d+ servers, arrived at (\d+\.\d+), and got service after waiting (\d+\.\d+)"
 
@@ -38,12 +38,20 @@ def read(system_server_number, filepath, lam, miu):
     
     with open(full_path, 'r') as file:
         for line in file:
-            match = pattern.match(line)
+            match = pattern.search(line)
             if match:
                 arrival_times.append(float(match.group(1)))
                 waiting_times.append(float(match.group(2)))
-    
+            else:
+                print(f"Invalid line  {line}")
+
     return arrival_times, waiting_times
+
+def check_directory(directory):
+    return os.path.exists(directory)
+
+def create_directory(directory):
+    os.makedirs(directory)
 
 # Example Usage:
 # write(1, 0.56, 1.23, 5, 'data', 0.5, 0.7)

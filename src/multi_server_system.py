@@ -104,6 +104,7 @@ def simulate_systems_CI_band(num_servers_list, arrival_rate, service_rate, custo
         arrival_queues = [simpy.Store(env) for _ in num_servers_list]
         systems = [MultiServerSystem(env, n, arrival_rate, service_rate, arrival_queues[i]) for i, n in enumerate(num_servers_list)]
         for system in systems:
+            system.need_to_write = False
             env.process(system.run())
         
         def generate_arrivals():
@@ -153,7 +154,7 @@ def simulate_systems_CI_band(num_servers_list, arrival_rate, service_rate, custo
 
     print(f'Waiting time CI bands for rho={arrival_rate / service_rate}: {Diff_CI_results}')
     return Diff_CI_results
-    
+
 def simulate_sjf_system(num_servers, arrival_rate, service_rate, sim_time):
     env = simpy.Environment()
     arrival_queue_SJF = simpy.PriorityStore(env) # for SJF
@@ -180,6 +181,55 @@ def simulate_sjf_system(num_servers, arrival_rate, service_rate, sim_time):
     env.run(until=sim_time)
     
     return system_SJF.wait_times, system_FIFO.wait_times
+
+def simulate_sjf_system_once(num_servers, arrival_rate, service_rate, customers):
+    env = simpy.Environment()
+    arrival_queue_SJF = simpy.PriorityStore(env) # for SJF
+    arrival_queue_FIFO = simpy.Store(env) # for FIFO
+    server_queue_FIFO = simpy.Store(env) # for FIFO
+
+    system_SJF = MultiServerSystemSJF(env, num_servers, arrival_rate, service_rate, arrival_queue_SJF)
+    system_SJF.need_to_write = False
+    system_FIFO = MultiServerSystem(env, num_servers, arrival_rate, service_rate, arrival_queue_FIFO, server_queue_FIFO)
+    system_FIFO.need_to_write = False
+    
+    env.process(system_SJF.run())
+    env.process(system_FIFO.run())
+
+    def generate_arrivals():
+        customer_ID = 0
+        while customer_ID < customers:
+            yield env.timeout(random.expovariate(arrival_rate))
+            arrival_time = env.now
+            service_time = random.expovariate(service_rate)
+            yield arrival_queue_SJF.put((service_time, (customer_ID, (arrival_time, service_time))))  # Use service_time as priority
+            yield arrival_queue_FIFO.put((customer_ID, arrival_time))
+            yield server_queue_FIFO.put((customer_ID, service_time))
+            customer_ID += 1
+
+    env.process(generate_arrivals())
+    env.run()
+    
+    return system_SJF.wait_times, system_FIFO.wait_times
+
+def simulate_systems_CI_band_SJF(num_servers_list, arrival_rate, service_rate, customers, repeats=10):
+    results = [[],[],[]]
+    for _ in range(repeats):
+        sjf_waiting_time,  FIFO_waiting_time= simulate_sjf_system_once(num_servers_list, arrival_rate, service_rate, customers)
+        # calculate the waiting time difference between SJF and FIFO
+        # then calculate the 95% confidence interval for the difference
+        diff = np.array(FIFO_waiting_time) - np.array(sjf_waiting_time)
+        mean_diff = np.mean(diff)
+        std_error = np.std(diff, ddof=1) / np.sqrt(len(diff))
+        lamb_CI = stats.norm.ppf((1 + 0.95) / 2)
+        upper_bound = mean_diff + lamb_CI * std_error
+        lower_bound = mean_diff - lamb_CI * std_error
+        #print(f'Difference in waiting time for SJF and FIFO: {diff}')
+        #print(f'95% CI for the difference: ({lower_bound}, {upper_bound})')
+        results[0].append(mean_diff)
+        results[1].append(lower_bound)
+        results[2].append(upper_bound)
+    return results
 
 if __name__ == "__main__":
     arrival_rate = 0.9  # Lambda

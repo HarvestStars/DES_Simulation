@@ -75,26 +75,6 @@ def visulize_all_parameters_pair_diff_waiting_time_sjf(miu, lambdas, fileName_pr
         i += 1
         plt.plot(customers_compared, waiting_time_compared, label=f"SJF_rho_{rho}", color=colors[i % len(colors)], linestyle=linestyles[i % len(linestyles)])
         
-        # # reorder the waiting_time_compared based on the customer number
-        # # attention: the customer number in the two systems may not be the same
-        # # so we should compare the customers in both systems and pick up the overlap part, if customer is not in both, then remove it from the existed system
-        # customers_base_set = set(customers_base)
-        # customers_compared_set = set(customers_compared)
-        # customers_overlap = customers_base_set & customers_compared_set
-        # customers_base = [customer for customer in customers_base if customer in customers_overlap]
-        # waiting_time_base = [waiting_time_base[customers_base.index(customer)] for customer in customers_overlap]
-        # customers_compared = [customer for customer in customers_compared if customer in customers_overlap]
-        # waiting_time_compared = [waiting_time_compared[customers_compared.index(customer)] for customer in customers_overlap]
-        
-        # # after that, we reorder the waiting_time_compared based on the customer number in the base system
-        # waiting_time_compared = [waiting_time_compared[customers_compared.index(customer)] for customer in customers_base]
-        # results[f"rho_{rho}"] = np.array(waiting_time_base) - np.array(waiting_time_compared)
-
-    # # align the waiting times in results
-    # min_len = min([len(value) for value in results.values()])
-    # for key, value in results.items():
-    #     results[key] = value[:min_len]
-
     plt.legend()
     plt.grid()
     plt.savefig(f"{fs.SIMU_VISUALIZATION_PATH}{fileName_prefix}_waiting_time_diff_with_n_1.png")

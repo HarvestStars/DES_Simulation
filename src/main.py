@@ -33,7 +33,7 @@ def run_multi_server_system():
             print(f"Average waiting time for system with n={num_servers_list[i]} servers: {mean_wait:.2f}")
 
 def run_multi_CI_band():
-    customers = 100
+    customers = 1000
     repeats = 100  # Total simulation time
     
     plt.figure(figsize=(12, 8))
@@ -78,7 +78,6 @@ def run_multi_CI_band():
     
     plt.savefig(f"../visualization/CI_band_plot_sys.png")
     
-
 def run_multi_server_system_sjf():
     sim_time = 1000  # Total simulation time
 
@@ -91,6 +90,43 @@ def run_multi_server_system_sjf():
         print(f"Average waiting time for SJF system with n={num_servers} servers: {mean_wait_SJF:.2f}, rho: {lam / FIXED_MIU}")
         print(f"Average waiting time for FIFO system with n={num_servers} servers: {mean_wait_FIFO:.2f}, rho: {lam / FIXED_MIU}")
 
+def run_multi_CI_band_sjf():
+    customers = 100
+    repeats = 100  # Total simulation time
+
+    plt.figure(figsize=(10, 6))
+    # plt.axhline(y=3e-1, color='red', linestyle='--', label='Approx. Zero')
+    # plt.text(10, 1e-3, 'Zero (approx)', color='red')
+
+    zero_points = {}
+    color = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+
+    for i, lam in enumerate([0.6, 0.8, 0.99]):
+        # Simulate multiple systems with separate arrival queues
+        num_servers = 1
+        systems_CI_bands = mss.simulate_systems_CI_band_SJF(num_servers, lam, FIXED_MIU, customers, repeats)
+        # plot the results
+        plt.plot(range(repeats), systems_CI_bands[0], label=f"rho={lam / FIXED_MIU}", color=color[i])
+        plt.fill_between(range(repeats), systems_CI_bands[1], systems_CI_bands[2], alpha=0.4, color=color[i])
+
+        zeros = []
+        for i in range(repeats):
+            if systems_CI_bands[1][i] <= 0 <= systems_CI_bands[2][i]:
+                zeros.append(i)
+                # plt.plot(i, 0, 'ro', label="Zero in CI")
+        zero_points[lam / FIXED_MIU] = zeros
+
+    for i, key in enumerate(zero_points.keys()):
+        if len(zero_points[key]) > 0:
+            plt.plot(zero_points[key], [0] * len(zero_points[key]), 'o', label=f"Zero in CI for rho={key}", color=color[i])
+    
+    plt.xlabel("Repeats")
+    plt.ylabel("Difference of waiting Time")
+    plt.title("Waiting Time Difference CI Band for SJF and FIFO systems")
+    plt.legend()
+    plt.grid()
+    plt.savefig(f"../visualization/CI_band_plot_SJF.png")
+
 def main_controller():
     try:
         
@@ -102,6 +138,7 @@ def main_controller():
             print("3: Run Simulation between SFJ and FIFO systems")
             print("4: Run Difference waiting time vizualization between SFJ and FIFO systems")
             print("5: Run multi-server system simulation CI band plot, for n=1,2,4, each system has 1000 customers and repeats 100 times")
+            print("6: Run multi-server system simulation CI band plot for SJF and FIFO systems, for n=1, each system has 1000 customers and repeats 100 times")
             print("0: Exit")
             
             try:
@@ -142,6 +179,13 @@ def main_controller():
                 wait_thread = threading.Thread(target=show_wait_message, args=("Running DES simulation for different server systems, please wait ",))
                 wait_thread.start()
                 run_multi_CI_band()
+                stop_event.set()
+                wait_thread.join()
+            
+            if choice == 6:
+                wait_thread = threading.Thread(target=show_wait_message, args=("Running SJF system simulation, please wait ",))
+                wait_thread.start()
+                run_multi_CI_band_sjf()
                 stop_event.set()
                 wait_thread.join()
 

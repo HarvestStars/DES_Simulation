@@ -118,7 +118,7 @@ def run_multi_CI_band_sjf():
 
     for i, key in enumerate(zero_points.keys()):
         if len(zero_points[key]) > 0:
-            plt.plot(zero_points[key], [0] * len(zero_points[key]), 'o', label=f"Zero in CI for rho={key}", color=color[i])
+            plt.plot(zero_points[key], [0] * len(zero_points[key]), 'o', label=f"Zero in time difference for rho={key}", color=color[i])
     
     plt.xlabel("Repeats")
     plt.ylabel("Difference of waiting Time")

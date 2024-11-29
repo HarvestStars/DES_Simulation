@@ -43,7 +43,7 @@ def calculate_pair_confidence_intervals(n0, n1, lam, miu, CI=0.95):
 if __name__ == "__main__":
     n0 = 1
     n1 = 2
-    lam = 0.9
+    lam = 0.5
     miu = 1.0
     result = calculate_pair_confidence_intervals(n0, n1, lam, miu)
     print(result)

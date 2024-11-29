@@ -2,6 +2,7 @@ import simpy
 import random
 import numpy as np
 import file_sys as fs
+from scipy import stats
 
 class MultiServerSystem:
     def __init__(self, env, num_servers, arrival_rate, service_rate, arrival_queue, server_queue=None):
@@ -11,6 +12,7 @@ class MultiServerSystem:
         self.arrival_rate = arrival_rate
         self.service_rate = service_rate
         self.arrival_queue = arrival_queue
+        self.need_to_write = True
 
         if server_queue is None:
             self.server_queue = None
@@ -28,11 +30,13 @@ class MultiServerSystem:
             service_time = 0
             if self.server_queue is None:
                 service_time = random.expovariate(self.service_rate)
-                fs.write(customer_ID, arrival_time, wait_time, service_time, self.num_servers, fs.SIMU_RESULT_PATH, self.arrival_rate, self.service_rate)
+                if self.need_to_write:
+                    fs.write(customer_ID, arrival_time, wait_time, service_time, self.num_servers, fs.SIMU_RESULT_PATH, self.arrival_rate, self.service_rate)
             else:
                 # for SJF comparison
                 _, service_time = yield self.server_queue.get()
-                fs.write(customer_ID, arrival_time, wait_time, service_time, self.num_servers, fs.SIMU_RESULT_PATH, self.arrival_rate, self.service_rate, prefix="Comparison_FIFO")
+                if self.need_to_write:
+                    fs.write(customer_ID, arrival_time, wait_time, service_time, self.num_servers, fs.SIMU_RESULT_PATH, self.arrival_rate, self.service_rate, prefix="Comparison_FIFO")
             
             yield self.env.timeout(service_time)
 
@@ -49,7 +53,9 @@ class MultiServerSystemSJF:
         self.arrival_rate = arrival_rate
         self.service_rate = service_rate
         self.arrival_queue = arrival_queue
+        self.need_to_write = True
         self.wait_times = []
+        
 
     def run(self):
         while True:
@@ -58,10 +64,11 @@ class MultiServerSystemSJF:
                 (_, (customer_ID, (arrival_time, service_time))) = yield self.arrival_queue.get()
                 wait_time = self.env.now - arrival_time
                 self.wait_times.append(wait_time)
-                fs.write(customer_ID, arrival_time, wait_time, service_time, self.num_servers, fs.SIMU_RESULT_PATH, self.arrival_rate, self.service_rate, prefix="Comparison_SJF")
+                if self.need_to_write:
+                    fs.write(customer_ID, arrival_time, wait_time, service_time, self.num_servers, fs.SIMU_RESULT_PATH, self.arrival_rate, self.service_rate, prefix="Comparison_SJF")
                 yield self.env.timeout(service_time)
 
-def simulate_systems(num_servers_list, arrival_rate, service_rate, sim_time):
+def simulate_systems_once(num_servers_list, arrival_rate, service_rate, sim_time):
     env = simpy.Environment()
     arrival_queues = [simpy.Store(env) for _ in num_servers_list]
     systems = [MultiServerSystem(env, n, arrival_rate, service_rate, arrival_queues[i]) for i, n in enumerate(num_servers_list)]
@@ -82,6 +89,71 @@ def simulate_systems(num_servers_list, arrival_rate, service_rate, sim_time):
     env.run(until=sim_time)
     return [system.wait_times for system in systems]
 
+def simulate_systems_CI_band(num_servers_list, arrival_rate, service_rate, customers, repeats=10):
+    # for each system, new a list to store the 3 np.array, the mean waiting time, the 95% lower bound and the upper bound
+    Diff_CI_results = {}
+    for n in num_servers_list:
+        Diff_CI_results[n] = [ [], [], [] ]
+
+    for _ in range(repeats):
+        mean_waits = {}
+        for n in num_servers_list:
+            mean_waits[n] = []
+
+        env = simpy.Environment()
+        arrival_queues = [simpy.Store(env) for _ in num_servers_list]
+        systems = [MultiServerSystem(env, n, arrival_rate, service_rate, arrival_queues[i]) for i, n in enumerate(num_servers_list)]
+        for system in systems:
+            env.process(system.run())
+        
+        def generate_arrivals():
+            customer_ID = 0
+            while customer_ID < customers:
+                yield env.timeout(random.expovariate(arrival_rate))
+                arrival_time = env.now
+                # Put the same arrival time into each system's queue
+                for queue in arrival_queues:
+                    yield queue.put((customer_ID, arrival_time))
+                customer_ID += 1
+
+        env.process(generate_arrivals())
+        env.run()
+        
+        # need to clean the evn?
+        env = None
+
+        for system in systems: 
+            # store the mean waiting time, the 95% CI lower bound and the upper bound
+            wait_times = np.array(system.wait_times)
+            mean_waits[system.num_servers] = wait_times
+
+        # calculate the waiting time difference between 1 and 2, and 1 and 4,
+        # then calculate the 95% confidence interval for the difference
+        for i in range(1, len(num_servers_list)):
+
+            # align the waiting times
+            mean_waits[num_servers_list[i]] = mean_waits[num_servers_list[i]][:len(mean_waits[num_servers_list[0]])]
+            diff = np.array(mean_waits[num_servers_list[0]]) - np.array(mean_waits[num_servers_list[i]])
+            # print(f'Difference in waiting time for n={num_servers_list[0]} and n={num_servers_list[i]}: {diff}')    
+            mean_diff = np.mean(diff)
+            std_error = np.std(diff, ddof=1) / np.sqrt(len(diff))
+            lamb_CI = stats.norm.ppf((1 + 0.95) / 2) # for 95% it should be 1.96
+            
+            # if bound element is NAN or INF, replace it with 0
+            upper_bound = mean_diff + lamb_CI * std_error 
+            lower_bound = mean_diff - lamb_CI * std_error
+            if np.isnan(upper_bound) or np.isinf(upper_bound):
+                upper_bound = 0
+            if np.isnan(lower_bound) or np.isinf(lower_bound):
+                lower_bound = 0
+
+            Diff_CI_results[num_servers_list[i]][0].append(mean_diff)
+            Diff_CI_results[num_servers_list[i]][1].append(lower_bound)
+            Diff_CI_results[num_servers_list[i]][2].append(upper_bound)
+
+    print(f'Waiting time CI bands for rho={arrival_rate / service_rate}: {Diff_CI_results}')
+    return Diff_CI_results
+    
 def simulate_sjf_system(num_servers, arrival_rate, service_rate, sim_time):
     env = simpy.Environment()
     arrival_queue_SJF = simpy.PriorityStore(env) # for SJF

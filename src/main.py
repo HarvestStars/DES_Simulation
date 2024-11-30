@@ -36,14 +36,18 @@ def run_multi_CI_band():
     customers = 1000
     repeats = 100  # Total simulation time
     
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(14, 12))
+    plt.subplots_adjust(hspace=0.4)  # adjust the space between the plots
+
     p12 = plt.subplot(2, 1, 1)
     p12.axhline(y=1e-1, color='red', linestyle='--', label='Approx. Zero')
-    p12.text(10, 1.2e-1, 'Zero (approx)', color='red')
+    p12.text(2, 1.2e-1, 'Zero (approx)', color='red', fontsize=14)
+    p12.tick_params(axis='both', labelsize=12)
 
     p14 = plt.subplot(2, 1, 2)
     p14.axhline(y=1e-1, color='red', linestyle='--', label='Approx. Zero')
-    p14.text(10, 1.2e-1, 'Zero (approx)', color='red')
+    p14.text(2, 1.2e-1, 'Zero (approx)', color='red', fontsize=14)
+    p14.tick_params(axis='both', labelsize=12)
 
     for lam in LAMBDAS:
         # Simulate multiple systems with separate arrival queues
@@ -70,13 +74,15 @@ def run_multi_CI_band():
                 if lower_bounds[i] <= 0 <= upper_bounds[i]:
                     p.plot(i, 0, 'ro')
 
-            p.set_xlabel("Repeats")
-            p.set_ylabel("Difference of waiting Time")
-            p.set_title(f"Waiting Time Difference CI Band for system n=1 and n={key}")
-            p.legend()
+            p.set_xlabel("Simulation Repeats", fontsize=16)
+            p.set_ylabel("Difference of Waiting Time", fontsize=18)
+            p.set_title(f"CI Bands of Waiting Time Difference between M/M/n System n=1 and n={key}", fontsize=18)
             p.grid()
     
-    plt.savefig(f"../visualization/CI_band_plot_FIFO_sys.png")
+    handles, labels = p12.get_legend_handles_labels()
+    plt.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=len(LAMBDAS), fontsize=16)
+    plt.tight_layout(rect=[0, 0.1, 1, 1])
+    plt.savefig(f"../visualization/CI_band_plot_FIFO_sys.png", bbox_inches='tight')
     
 def run_multi_server_system_sjf():
     sim_time = 1000  # Total simulation time
@@ -95,8 +101,6 @@ def run_multi_CI_band_sjf():
     repeats = 100  # Total simulation time
 
     plt.figure(figsize=(10, 6))
-    # plt.axhline(y=3e-1, color='red', linestyle='--', label='Approx. Zero')
-    # plt.text(10, 1e-3, 'Zero (approx)', color='red')
 
     zero_points = {}
     color = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
@@ -120,28 +124,32 @@ def run_multi_CI_band_sjf():
         if len(zero_points[key]) > 0:
             plt.plot(zero_points[key], [0] * len(zero_points[key]), 'o', label=f"Zero in time difference for rho={key}", color=color[i])
     
-    plt.xlabel("Repeats")
-    plt.ylabel("Difference of waiting Time")
-    plt.title("Waiting Time Difference CI Band for SJF and FIFO systems")
+    plt.xlabel("Simulation Repeats", fontsize=16)
+    plt.ylabel("Difference of Waiting Time", fontsize=16)
+    plt.title("CI Bands of Waiting Time Difference Between FIFO and SJF Systems, with n=1 ", fontsize=18)
     plt.legend()
     plt.grid()
     plt.savefig(f"../visualization/CI_band_plot_SJF_sys.png")
 
 def run_multi_CI_band_MDN_and_long_tail():
-    customers = 100
+    customers = 1000
     repeats = 100  # Total simulation time
     service_list = ["constant", "long_tail"]
     
     for s in service_list:
-        plt.figure(figsize=(12, 8))
+        plt.figure(figsize=(14, 10))
+        plt.subplots_adjust(hspace=0.4)  # adjust the space between the plots
+        
         p12 = plt.subplot(2, 1, 1)
         p14 = plt.subplot(2, 1, 2)
         if s == "constant":
             p12.axhline(y=1e-1, color='red', linestyle='--', label='Approx. Zero')
-            p12.text(10, 1.2e-1, 'Zero (approx)', color='red')
+            p12.text(2, 1.2e-1, 'Zero (approx)', color='red', fontsize=14)
+            p12.tick_params(axis='both', labelsize=14)
 
             p14.axhline(y=1e-1, color='red', linestyle='--', label='Approx. Zero')
-            p14.text(10, 1.2e-1, 'Zero (approx)', color='red')
+            p14.text(2, 1.2e-1, 'Zero (approx)', color='red', fontsize=14)
+            p14.tick_params(axis='both', labelsize=14)
 
         for lam in LAMBDAS:
             # Simulate multiple systems with separate arrival queues
@@ -150,11 +158,21 @@ def run_multi_CI_band_MDN_and_long_tail():
 
             # system_CI_bands is a dictionary with key as the number of servers and value as a tuple of 3 np.arrays
             for key, (mean_diff_waits, lower_bounds, upper_bounds) in systems_CI_bands.items():
+                zeros = []
                 if key == 1:
                     continue # n=1, base system, no need to compare with itself
 
                 if key == 2:
                     p = p12
+                    for i in range(repeats):
+                        if lower_bounds[i] <= 0 <= upper_bounds[i]:
+                            zeros.append(i)
+                            #p.plot(i, 0, 'ro')
+                    if lam == 0.99:
+                        p.plot(zeros, np.zeros(len(zeros)), 'ro', label="Zero Difference")
+                    else:
+                        p.plot(zeros, np.zeros(len(zeros)), 'ro')
+
                 else:
                     p = p14
                 
@@ -165,24 +183,22 @@ def run_multi_CI_band_MDN_and_long_tail():
                 
                 if s == "constant":
                     p.set_yscale('log')
-                
-                for i in range(repeats):
-                    if lower_bounds[i] <= 0 <= upper_bounds[i]:
-                        p.plot(i, 0, 'ro')
 
-                p.set_xlabel("Repeats")
-                p.set_ylabel("Difference of waiting Time")
+                p.set_xlabel("Simulation Repeats", fontsize=16)
+                p.set_ylabel("Difference of Waiting Time", fontsize=16)
                 if s == "constant":
-                    p.set_title(f"Waiting Time Difference CI Band for M/D/N system n=1 and n={key}")
+                    p.set_title(f"CI Bands of Waiting Time Difference for M/D/N Systems n=1 and n={key}, D = 1.0", fontsize=18)
                 else:
-                    p.set_title(f"Waiting Time Difference CI Band for Long Tail system n=1 and n={key}")
-                p.legend()
+                    p.set_title(f"CI Bands of Waiting Time Difference for Long Tail Systems n=1 and n={key}, service rate 1.0 for 75% jobs, 0.2 for 25% jobs", fontsize=18)
                 p.grid()
-        
+
+        handles, labels = p12.get_legend_handles_labels()
+        plt.legend(handles, labels, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=len(LAMBDAS), fontsize=16)
+        plt.tight_layout(rect=[0, 0.1, 1, 1])
         if s == "constant":
-            plt.savefig(f"../visualization/CI_band_plot_MDN_sys.png")
+            plt.savefig(f"../visualization/CI_band_plot_MDN_sys.png", bbox_inches='tight')
         else:
-            plt.savefig(f"../visualization/CI_band_plot_long_tail_sys.png")
+            plt.savefig(f"../visualization/CI_band_plot_long_tail_sys.png", bbox_inches='tight')
 
 def main_controller():
     try:

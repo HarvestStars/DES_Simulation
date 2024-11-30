@@ -55,11 +55,7 @@ def visulize_all_parameters_pair_diff_waiting_time_sjf(miu, lambdas, fileName_pr
     linestyles = ['-', '--', '-.', ':']
     markers = ['o', 's', 'D', 'v', '^', '<', '>', 'p', 'h', 'H', '8', '*', 'X']
     results = {}
-    # plot the results
-    plt.figure(figsize=(10, 6))
-    plt.xlabel("Customer Number")
-    plt.ylabel("Waiting Time Difference")
-    plt.title(f"Difference in Waiting Time for Customers in SFJ and FIFO Systems, with n=1 servers")
+    
     for lam in lambdas:
         # read from the file
         customers_base, _, waiting_time_base, _= fs.read(1, fs.SIMU_RESULT_PATH, lam, miu, prefix="Comparison_FIFO")
@@ -71,13 +67,32 @@ def visulize_all_parameters_pair_diff_waiting_time_sjf(miu, lambdas, fileName_pr
         waiting_time_compared = list(waiting_time_compared)
 
         rho = lam / miu
+        
+        # plot the results
+        # plt.rc('font', size=20)
+        plt.figure(figsize=(10, 6))
+
+        # change font size of the labels
+        plt.xlabel("Customer Number", fontsize=20)
+        plt.ylabel("Waiting Time", fontsize=20)
+        plt.title(f"Waiting Time for Customers in SFJ and FIFO Systems, both with n=1 server", fontsize=16)
+
+        plt.tick_params(axis='x', labelsize=12)  # set X axis scale font size
+        plt.tick_params(axis='y', labelsize=14)  # set Y axis scale font size
+
         plt.plot(customers_base, waiting_time_base, label=f"FIFO_rho_{rho}", color=colors[i % len(colors)], linestyle=linestyles[i % len(linestyles)])
         i += 1
         plt.plot(customers_compared, waiting_time_compared, label=f"SJF_rho_{rho}", color=colors[i % len(colors)], linestyle=linestyles[i % len(linestyles)])
-        
-    plt.legend()
-    plt.grid()
-    plt.savefig(f"{fs.SIMU_VISUALIZATION_PATH}{fileName_prefix}_waiting_time_diff_with_n_1.png")
+
+        # calculate the area under each plot
+        area_base = np.trapz(waiting_time_base, customers_base)
+        area_compared = np.trapz(waiting_time_compared, customers_compared)
+        print(f"rho: {rho}, area_base: {area_base}, area_compared: {area_compared}, diff: {area_base - area_compared}")
+            
+        plt.legend(fontsize=12)
+        plt.grid()
+        plt.savefig(f"{fs.SIMU_VISUALIZATION_PATH}{fileName_prefix}_waiting_time_diff_with_n_1_Rho_{ rho }.png")
+        plt.close()
 
 # Example Usage:
 if __name__ == "__main__":

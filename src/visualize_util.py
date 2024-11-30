@@ -49,6 +49,26 @@ def visulize_all_parameters_pair_diff_waiting_time(n0, n1, miu, lambdas, fileNam
     plt.grid()
     plt.savefig(f"{fs.SIMU_VISUALIZATION_PATH}{fileName_prefix}_waiting_time_diff_with_n_{n0}_and_{n1}.png")
 
+    # plot just waiting_time_base and waiting_time_compared in the same plot
+    for lam in lambdas:
+        _, _, waiting_time_base, _ = fs.read(n0, fs.SIMU_RESULT_PATH, lam, miu)
+        _, _, waiting_time_compared, _ = fs.read(n1, fs.SIMU_RESULT_PATH, lam, miu)
+        _, _, waiting_time_compare4, _ = fs.read(4, fs.SIMU_RESULT_PATH, lam, miu)
+        rho = lam / miu
+        plt.figure(figsize=(10, 6))
+        plt.xlabel("Customer Number", fontsize=20)
+        plt.ylabel("Waiting Time", fontsize=20)
+        plt.title(f"Waiting Time for Customers in 3 Systems, with n={n0}, n={n1} and n=4 servers, rho={rho}",fontsize=16)
+        plt.plot(waiting_time_base, label=f"n={n0}", color='b', linestyle='-')
+        plt.plot(waiting_time_compared, label=f"n={n1}", color='r', linestyle='-.')
+        plt.plot(waiting_time_compare4, label="n=4", color='g', linestyle='--')
+        plt.tick_params(axis='both', labelsize=14)
+        
+        plt.legend()
+        plt.grid()
+        plt.savefig(f"{fs.SIMU_VISUALIZATION_PATH}{fileName_prefix}_waiting_time_compare_with_n_{n0}_{n1}_and_4_rho_{rho}.png")
+
+
 def visulize_all_parameters_pair_diff_waiting_time_sjf(miu, lambdas, fileName_prefix):
     i = 0
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']

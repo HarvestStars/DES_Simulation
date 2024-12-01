@@ -3,6 +3,22 @@ import file_sys as fs
 import numpy as np
 
 def plot_pair_waiting_time_diff(n0, n1, rho, waiting_times_diff, filename_prefix):
+    """
+    Plot the difference in waiting times for customers in two systems
+
+    Parameters:
+    ----------
+    n0: int
+        number of servers in the first system
+    n1: int
+        number of servers in the second system
+    rho: float
+        traffic intensity
+    waiting_times_diff: list
+        list of differences in waiting times
+    filename_prefix: str
+        prefix of the filename
+    """
     plt.figure(figsize=(10, 6))
     plt.xlabel("Customer Number")
     plt.ylabel("Waiting Time Difference")
@@ -16,27 +32,39 @@ def plot_pair_waiting_time_diff(n0, n1, rho, waiting_times_diff, filename_prefix
         fs.create_directory(fs.SIMU_VISUALIZATION_PATH)
     plt.savefig(f"{fs.SIMU_VISUALIZATION_PATH}{filename_prefix}_waiting_time_diff_with_n_{n0}_and_{n1}_rho_{rho}.png")
 
-def visulize_all_parameters_pair_diff_waiting_time(n0, n1, miu, lambdas, fileName_prefix):
+def visulize_all_parameters_pair_diff_waiting_time(n0, n1, mu, lambdas, fileName_prefix):
+    """
+    Visualize the difference in waiting times for customers in two systems
+
+    Parameters:
+    ----------
+    n0: int
+        number of servers in the first system
+    n1: int
+        number of servers in the second system
+    mu: float
+        service rate
+    lambdas: list
+        list of arrival rates
+    fileName_prefix: str
+        prefix of the filename
+    """
     i = 0
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     linestyles = ['-', '--', '-.', ':']
     markers = ['o', 's', 'D', 'v', '^', '<', '>', 'p', 'h', 'H', '8', '*', 'X']
     results = {}
     for lam in lambdas:
-        # read from the file
-        _, _, waiting_time_base, _ = fs.read(n0, fs.SIMU_RESULT_PATH, lam, miu)
-        _, _, waiting_time_compared, _ = fs.read(n1, fs.SIMU_RESULT_PATH, lam, miu)
-        rho = lam / miu
-        # align the waiting times
+        _, _, waiting_time_base, _ = fs.read(n0, fs.SIMU_RESULT_PATH, lam, mu)
+        _, _, waiting_time_compared, _ = fs.read(n1, fs.SIMU_RESULT_PATH, lam, mu)
+        rho = lam / mu
         waiting_time_compared = waiting_time_compared[:len(waiting_time_base)]
         results[f"$\\rho=${rho}"] = np.array(waiting_time_base) - np.array(waiting_time_compared)
 
-    # align the waiting times in results
     min_len = min([len(value) for value in results.values()])
     for key, value in results.items():
         results[key] = value[:min_len]
 
-    # plot the results
     plt.figure(figsize=(10, 6))
     plt.xlabel("Customer Number")
     plt.ylabel("Waiting Time Difference")
@@ -49,12 +77,11 @@ def visulize_all_parameters_pair_diff_waiting_time(n0, n1, miu, lambdas, fileNam
     plt.grid()
     plt.savefig(f"{fs.SIMU_VISUALIZATION_PATH}{fileName_prefix}_waiting_time_diff_with_n_{n0}_and_{n1}.png")
 
-    # plot just waiting_time_base and waiting_time_compared in the same plot
     for lam in lambdas:
-        _, _, waiting_time_base, _ = fs.read(n0, fs.SIMU_RESULT_PATH, lam, miu)
-        _, _, waiting_time_compared, _ = fs.read(n1, fs.SIMU_RESULT_PATH, lam, miu)
-        _, _, waiting_time_compare4, _ = fs.read(4, fs.SIMU_RESULT_PATH, lam, miu)
-        rho = lam / miu
+        _, _, waiting_time_base, _ = fs.read(n0, fs.SIMU_RESULT_PATH, lam, mu)
+        _, _, waiting_time_compared, _ = fs.read(n1, fs.SIMU_RESULT_PATH, lam, mu)
+        _, _, waiting_time_compare4, _ = fs.read(4, fs.SIMU_RESULT_PATH, lam, mu)
+        rho = lam / mu
         plt.figure(figsize=(10, 6))
         plt.xlabel("Customer Number", fontsize=20)
         plt.ylabel("Waiting Time", fontsize=20)
@@ -69,7 +96,19 @@ def visulize_all_parameters_pair_diff_waiting_time(n0, n1, miu, lambdas, fileNam
         plt.savefig(f"{fs.SIMU_VISUALIZATION_PATH}{fileName_prefix}_waiting_time_compare_with_n_{n0}_{n1}_and_4_rho_{rho}.png")
 
 
-def visulize_all_parameters_pair_diff_waiting_time_sjf(miu, lambdas, fileName_prefix):
+def visulize_all_parameters_pair_diff_waiting_time_sjf(mu, lambdas, fileName_prefix):
+    """
+    Visualize the difference in waiting times for customers in SJF and FIFO systems
+
+    Parameters:
+    ----------
+    mu: float
+        service rate
+    lambdas: list
+        list of arrival rates
+    fileName_prefix: str
+        prefix of the filename
+    """
     i = 0
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     linestyles = ['-', '--', '-.', ':']
@@ -77,22 +116,18 @@ def visulize_all_parameters_pair_diff_waiting_time_sjf(miu, lambdas, fileName_pr
     results = {}
     
     for lam in lambdas:
-        # read from the file
-        customers_base, _, waiting_time_base, _= fs.read(1, fs.SIMU_RESULT_PATH, lam, miu, prefix="Comparison_FIFO")
-        customers_compared, _, waiting_time_compared, _ = fs.read(1, fs.SIMU_RESULT_PATH, lam, miu, prefix="Comparison_SJF")
-        # reorder the waiting_time_compared based on the customer number
+        customers_base, _, waiting_time_base, _= fs.read(1, fs.SIMU_RESULT_PATH, lam, mu, prefix="Comparison_FIFO")
+        customers_compared, _, waiting_time_compared, _ = fs.read(1, fs.SIMU_RESULT_PATH, lam, mu, prefix="Comparison_SJF")
         sorted_data = sorted(zip(customers_compared, waiting_time_compared), key=lambda x: x[0])
         customers_compared, waiting_time_compared = zip(*sorted_data)
         customers_compared = list(customers_compared)
         waiting_time_compared = list(waiting_time_compared)
 
-        rho = lam / miu
+        rho = lam / mu
         
-        # plot the results
-        # plt.rc('font', size=20)
+
         plt.figure(figsize=(10, 6))
 
-        # change font size of the labels
         plt.xlabel("Customer Number", fontsize=20)
         plt.ylabel("Waiting Time", fontsize=20)
         plt.title(f"Waiting Time for Customers in SFJ and FIFO Systems, both with $n=1$ server", fontsize=16)

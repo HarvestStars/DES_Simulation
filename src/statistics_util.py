@@ -3,11 +3,39 @@ import numpy as np
 import scipy.stats as stats
 import visualize_util as vu
 
-# Calculate confidence intervals for the difference in means of two samples
-def calculate_pair_confidence_intervals(n0, n1, lam, miu, CI=0.95):
-    # Read the data from the files
-    _, _, waiting_times_base, _ = fs.read(n0, fs.SIMU_RESULT_PATH, lam, miu)
-    _, _, waiting_times_compared, _ = fs.read(n1, fs.SIMU_RESULT_PATH, lam, miu)
+# 
+def calculate_pair_confidence_intervals(n0, n1, lam, mu, CI=0.95):
+    """
+    Calculate confidence intervals for the difference in means of two samples
+
+    Parameters:
+    ----------
+    n0: int
+        number of servers in the first system
+    n1: int
+        number of servers in the second system
+    lam: float
+        arrival rate
+    mu: float
+        service rate
+
+    Returns:
+    ----------
+    dict
+        A dictionary containing the following keys:
+            - lower_bound: float
+                lower bound of the confidence interval
+            - upper_bound: float
+                upper bound of the confidence interval
+            - hypothesis_mean: float
+                mean of the hypothesis
+            - included_in_CI: bool
+                True if the hypothesis mean is included in the confidence interval
+            - standard_deviation: float
+                standard deviation of the difference in means
+    """
+    _, _, waiting_times_base, _ = fs.read(n0, fs.SIMU_RESULT_PATH, lam, mu)
+    _, _, waiting_times_compared, _ = fs.read(n1, fs.SIMU_RESULT_PATH, lam, mu)
 
     confidence_level = CI
     lamb_CI = stats.norm.ppf((1 + confidence_level) / 2) # for 95% it should be 1.96
@@ -24,13 +52,10 @@ def calculate_pair_confidence_intervals(n0, n1, lam, miu, CI=0.95):
     upper_bound = RVs_mean_diff + lamb_CI * RVs_std_error
     lower_bound = RVs_mean_diff - lamb_CI * RVs_std_error
 
-    # z_value = (RVs_mean_diff - 0) / RVs_std_error
-    # included_in_CI = -lamb_CI <= z_value <= lamb_CI
-    # 
     # Instead of Z value, we here use upper and lower bounds to check if the mean is within the confidence interval
     # we expecect the mean to be 0, so we check if the mean is within the confidence interval
     included_in_CI = lower_bound <= 0 <= upper_bound
-    vu.plot_pair_waiting_time_diff(n0, n1, lam / miu, RV_diff_waiting_times, "multiSys")
+    vu.plot_pair_waiting_time_diff(n0, n1, lam / mu, RV_diff_waiting_times, "multiSys")
 
     return {
         'lower_bound': lower_bound,

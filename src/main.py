@@ -66,7 +66,7 @@ def run_multi_CI_band():
             
             # make x labels integer
             p.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
-            p.plot(range(repeats), mean_diff_waits, label=f"rho={lam / FIXED_MIU}")
+            p.plot(range(repeats), mean_diff_waits, label=f"$\\rho$={lam / FIXED_MIU}")
             p.fill_between(range(repeats), lower_bounds, upper_bounds, alpha=0.4)
             p.set_yscale('log')
             
@@ -76,7 +76,7 @@ def run_multi_CI_band():
 
             p.set_xlabel("Simulation Repeats", fontsize=16)
             p.set_ylabel("Difference of Waiting Time", fontsize=18)
-            p.set_title(f"CI Bands of Waiting Time Difference between M/M/n System n=1 and n={key}", fontsize=18)
+            p.set_title(f"CI Bands of Waiting Time Difference between M/M/n\n System $n=1$ and $n$={key}", fontsize=18)
             p.grid()
     
     handles, labels = p12.get_legend_handles_labels()
@@ -93,8 +93,8 @@ def run_multi_server_system_sjf():
         wait_times_SJF, wait_times_FIFO = mss.simulate_sjf_system(num_servers, lam, FIXED_MIU, sim_time)
         mean_wait_SJF = np.mean(wait_times_SJF)
         mean_wait_FIFO = np.mean(wait_times_FIFO)
-        print(f"Average waiting time for SJF system with n={num_servers} servers: {mean_wait_SJF:.2f}, rho: {lam / FIXED_MIU}")
-        print(f"Average waiting time for FIFO system with n={num_servers} servers: {mean_wait_FIFO:.2f}, rho: {lam / FIXED_MIU}")
+        print(f"Average waiting time for SJF system with $n=${num_servers} servers: {mean_wait_SJF:.2f}, $\\rho$: {lam / FIXED_MIU}")
+        print(f"Average waiting time for FIFO system with $n=${num_servers} servers: {mean_wait_FIFO:.2f}, $\\rho$: {lam / FIXED_MIU}")
 
 def run_multi_CI_band_sjf():
     customers = 100
@@ -110,7 +110,7 @@ def run_multi_CI_band_sjf():
         num_servers = 1
         systems_CI_bands = mss.simulate_systems_CI_band_SJF(num_servers, lam, FIXED_MIU, customers, repeats)
         # plot the results
-        plt.plot(range(repeats), systems_CI_bands[0], label=f"rho={lam / FIXED_MIU}", color=color[i])
+        plt.plot(range(repeats), systems_CI_bands[0], label=f"$\\rho=${lam / FIXED_MIU}", color=color[i])
         plt.fill_between(range(repeats), systems_CI_bands[1], systems_CI_bands[2], alpha=0.4, color=color[i])
 
         zeros = []
@@ -122,11 +122,11 @@ def run_multi_CI_band_sjf():
 
     for i, key in enumerate(zero_points.keys()):
         if len(zero_points[key]) > 0:
-            plt.plot(zero_points[key], [0] * len(zero_points[key]), 'o', label=f"Zero in time difference for rho={key}", color=color[i])
+            plt.plot(zero_points[key], [0] * len(zero_points[key]), 'o', label=f"Zero in time difference for $\\rho$={key}", color=color[i])
     
     plt.xlabel("Simulation Repeats", fontsize=16)
     plt.ylabel("Difference of Waiting Time", fontsize=16)
-    plt.title("CI Bands of Waiting Time Difference Between FIFO and SJF Systems, with n=1 ", fontsize=18)
+    plt.title("CI Bands of Waiting Time Difference Between FIFO and SJF Systems,\n with $n=1$ ", fontsize=18)
     plt.legend()
     plt.grid()
     plt.savefig(f"../visualization/CI_band_plot_SJF_sys.png")
@@ -152,7 +152,7 @@ def run_multi_CI_band_MDN_and_long_tail():
             p14.tick_params(axis='both', labelsize=14)
 
         for lam in LAMBDAS:
-            # Simulate multiple systems with separate arrival queues
+            # simulate multiple systems with separate arrival queues
             num_servers_list = [1, 2, 4]  # Different numbers of servers
             systems_CI_bands = mss.simulate_special_service_systems_CI_band(num_servers_list, lam, customers, repeats, s)
 
@@ -178,7 +178,7 @@ def run_multi_CI_band_MDN_and_long_tail():
                 
                 # make x labels integer
                 p.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
-                p.plot(range(repeats), mean_diff_waits, label=f"lambda={lam}")
+                p.plot(range(repeats), mean_diff_waits, label=f"$\\lambda$={lam}")
                 p.fill_between(range(repeats), lower_bounds, upper_bounds, alpha=0.4)
                 
                 if s == "constant":
@@ -187,9 +187,9 @@ def run_multi_CI_band_MDN_and_long_tail():
                 p.set_xlabel("Simulation Repeats", fontsize=16)
                 p.set_ylabel("Difference of Waiting Time", fontsize=16)
                 if s == "constant":
-                    p.set_title(f"CI Bands of Waiting Time Difference for M/D/N Systems n=1 and n={key}, D = 1.0", fontsize=18)
+                    p.set_title(f"CI Bands of Waiting Time Difference for M/D/N Systems\n $n=1$ and $n=${key}, $D=1.0$", fontsize=18)
                 else:
-                    p.set_title(f"CI Bands of Waiting Time Difference for Long Tail Systems n=1 and n={key}, service rate 1.0 for 75% jobs, 0.2 for 25% jobs", fontsize=18)
+                    p.set_title(f"CI Bands of Waiting Time Difference for Long Tail Systems\n $n=1$ and $n=${key}, service rate 1.0 for 75% jobs, 0.2 for 25% jobs", fontsize=18)
                 p.grid()
 
         handles, labels = p12.get_legend_handles_labels()
@@ -215,11 +215,11 @@ def main_controller():
             print("7: Run multi-server system simulation CI band plot for M/D/n and long tail service, for n=1,2,4, each system has 1000 customers and repeats 100 times")
             print("0: Exit")
             
-            try:
-                choice = int(input("Enter your choice: "))
-            except ValueError:
+            choice = input("Enter your choice: ")
+            if not choice.isdigit():
                 print("Invalid input, please enter a number.")
                 continue
+            choice = int(choice)
 
             if choice == 1:
                 wait_thread = threading.Thread(target=show_wait_message, args=("Running DES simulation for different server systems, please wait ",))
@@ -228,42 +228,42 @@ def main_controller():
                 stop_event.set()
                 wait_thread.join()
                 
-            if choice == 2:
+            elif choice == 2:
                 wait_thread = threading.Thread(target=show_wait_message, args=("Running Multi-server systems waiting time difference visulization, please wait ",))
                 wait_thread.start()
                 vu.visulize_all_parameters_pair_diff_waiting_time(1, 2, FIXED_MIU, LAMBDAS, "FIFO")
                 stop_event.set()
                 wait_thread.join()
 
-            if choice == 3:
+            elif choice == 3:
                 wait_thread = threading.Thread(target=show_wait_message, args=("Running SJF system simulation, please wait ",))
                 wait_thread.start()
                 run_multi_server_system_sjf()
                 stop_event.set()
                 wait_thread.join()
             
-            if choice == 4:
+            elif choice == 4:
                 wait_thread = threading.Thread(target=show_wait_message, args=("Running SJF system waiting time difference visulization, please wait ",))
                 wait_thread.start()
                 vu.visulize_all_parameters_pair_diff_waiting_time_sjf(FIXED_MIU, LAMBDAS, "SJF")
                 stop_event.set()
                 wait_thread.join()
 
-            if choice == 5:
+            elif choice == 5:
                 wait_thread = threading.Thread(target=show_wait_message, args=("Running DES simulation for different server systems, please wait ",))
                 wait_thread.start()
                 run_multi_CI_band()
                 stop_event.set()
                 wait_thread.join()
             
-            if choice == 6:
+            elif choice == 6:
                 wait_thread = threading.Thread(target=show_wait_message, args=("Running SJF system simulation, please wait ",))
                 wait_thread.start()
                 run_multi_CI_band_sjf()
                 stop_event.set()
                 wait_thread.join()
 
-            if choice == 7:
+            elif choice == 7:
                 wait_thread = threading.Thread(target=show_wait_message, args=("Running MDN and Long tail system simulation, please wait ",))
                 wait_thread.start()
                 run_multi_CI_band_MDN_and_long_tail()

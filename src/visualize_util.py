@@ -6,8 +6,8 @@ def plot_pair_waiting_time_diff(n0, n1, rho, waiting_times_diff, filename_prefix
     plt.figure(figsize=(10, 6))
     plt.xlabel("Customer Number")
     plt.ylabel("Waiting Time Difference")
-    plt.title(f"Difference in Waiting Time for Customers in Two Systems, with n={n0} and n={n1} servers")
-    plt.plot(waiting_times_diff, label=f"n={n0} - n={n1}")
+    plt.title(f"Difference in Waiting Time for Customers in Two Systems, with $n=${n0} and $n=${n1} servers")
+    plt.plot(waiting_times_diff, label=f"$n=${n0} - $n=${n1}")
     plt.legend()
     plt.grid()
 
@@ -29,7 +29,7 @@ def visulize_all_parameters_pair_diff_waiting_time(n0, n1, miu, lambdas, fileNam
         rho = lam / miu
         # align the waiting times
         waiting_time_compared = waiting_time_compared[:len(waiting_time_base)]
-        results[f"rho_{rho}"] = np.array(waiting_time_base) - np.array(waiting_time_compared)
+        results[f"$\\rho=${rho}"] = np.array(waiting_time_base) - np.array(waiting_time_compared)
 
     # align the waiting times in results
     min_len = min([len(value) for value in results.values()])
@@ -40,7 +40,7 @@ def visulize_all_parameters_pair_diff_waiting_time(n0, n1, miu, lambdas, fileNam
     plt.figure(figsize=(10, 6))
     plt.xlabel("Customer Number")
     plt.ylabel("Waiting Time Difference")
-    plt.title(f"Difference in Waiting Time for Customers in Two Systems, with n={n0} and n={n1} servers")
+    plt.title(f"Difference in Waiting Time for Customers in Two Systems, with $n=${n0} and $n=${n1} servers")
 
     for key, value in results.items():
         plt.plot(value, label=key, color=colors[i % len(colors)], linestyle=linestyles[i % len(linestyles)])
@@ -58,7 +58,7 @@ def visulize_all_parameters_pair_diff_waiting_time(n0, n1, miu, lambdas, fileNam
         plt.figure(figsize=(10, 6))
         plt.xlabel("Customer Number", fontsize=20)
         plt.ylabel("Waiting Time", fontsize=20)
-        plt.title(f"Waiting Time for Customers in 3 Systems, with n={n0}, n={n1} and n=4 servers, rho={rho}",fontsize=16)
+        plt.title(f"Waiting Time for Customers in 3 Systems, with $n=${n0}, $n=${n1} and $n=4$ servers, $\\rho=${rho}",fontsize=16)
         plt.plot(waiting_time_base, label=f"n={n0}", color='b', linestyle='-')
         plt.plot(waiting_time_compared, label=f"n={n1}", color='r', linestyle='-.')
         plt.plot(waiting_time_compare4, label="n=4", color='g', linestyle='--')
@@ -95,14 +95,14 @@ def visulize_all_parameters_pair_diff_waiting_time_sjf(miu, lambdas, fileName_pr
         # change font size of the labels
         plt.xlabel("Customer Number", fontsize=20)
         plt.ylabel("Waiting Time", fontsize=20)
-        plt.title(f"Waiting Time for Customers in SFJ and FIFO Systems, both with n=1 server", fontsize=16)
+        plt.title(f"Waiting Time for Customers in SFJ and FIFO Systems, both with $n=1$ server", fontsize=16)
 
         plt.tick_params(axis='x', labelsize=12)  # set X axis scale font size
         plt.tick_params(axis='y', labelsize=14)  # set Y axis scale font size
 
-        plt.plot(customers_base, waiting_time_base, label=f"FIFO_rho_{rho}", color=colors[i % len(colors)], linestyle=linestyles[i % len(linestyles)])
+        plt.plot(customers_base, waiting_time_base, label=f"FIFO_$\\rho=${rho}", color=colors[i % len(colors)], linestyle=linestyles[i % len(linestyles)])
         i += 1
-        plt.plot(customers_compared, waiting_time_compared, label=f"SJF_rho_{rho}", color=colors[i % len(colors)], linestyle=linestyles[i % len(linestyles)])
+        plt.plot(customers_compared, waiting_time_compared, label=f"SJF_$\\rho=${rho}", color=colors[i % len(colors)], linestyle=linestyles[i % len(linestyles)])
 
         # calculate the area under each plot
         area_base = np.trapz(waiting_time_base, customers_base)
